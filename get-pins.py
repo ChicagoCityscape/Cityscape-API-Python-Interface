@@ -1,8 +1,13 @@
 import requests
 import json
 import csv
+import pandas as pd
 
 address_list = 'sample.csv'
+output_path = 'output.csv'
+
+"""establishes the parameters for the api calls. atm they are decalred individually becuase the api needs them in a certain order.
+this code can be compressed to sort the dict directly """
 
 def get_address_json_from_row(params):
     # params = {k: '"{}"'.format(v) for k,v in row.iteritems()} #api requires double quotes to avoid null responses
@@ -15,11 +20,14 @@ def get_address_json_from_row(params):
     print response.url
     return response.json()
 
+"""currently un-used becuase string-matching is probably a bad idea here"""
 def get_exact_match(potential_matches, address):
     for match in potential_matches:
         if match['address'] == address:
             return match
     return False
+
+"""currently un-used, returns the closest centroid without using pandas"""
 
 def get_closest_match(potential_matches):
     def get_centroid(x):
@@ -27,17 +35,22 @@ def get_closest_match(potential_matches):
     return min(potential_matches, key=get_centroid)
     # returns the closest whatever
 
+"""uses pandas to return only the two entries with the smallest distance to centroid"""
+
+def get_two_closest(potential_matches):
+    two_closest = pd.DataFrame.from_records(potential_matches, index= None).apply(lambda x: pd.to_numeric(x, errors='ignore')).nsmallest(2, 'distance_to_centroid')
+    return two_closest
+
+
+#declare empy pandas df to store all results
+results = pd.DataFrame()
+#open the address lists and read the rows as dictionaries
 with open(address_list, 'rb') as f:
     in_csv1 = csv.DictReader(f)
-    for row in in_csv1:
+    for row in in_csv1: #parse each row into an api call, return only the intersecting parcels, get the two closest, append these results to the master dataframe
         r = get_address_json_from_row(row)
         intersecting_parcels = r['properties']['parcels_intersecting']
-        address = row['address']
-        print intersecting_parcels[0]['pin']
-		
-        # exact_match = get_exact_match(intersecting_parcels, address)
-        # exact_match = False
-        #if exact_match:
-        #    print exact_match
-        #else:
-        #    print get_closest_match(intersecting_parcels)
+        two_closest = get_two_closest(intersecting_parcels)
+        results = results.append(two_closest)
+#pick specific columns & write to csv
+results[['requested_address', 'address', 'pin', 'distance_to_centroid', 'distance_to_edge']].to_csv(output_path, index_label= 'closest_rank')
