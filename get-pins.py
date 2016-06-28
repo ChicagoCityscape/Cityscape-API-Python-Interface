@@ -17,8 +17,8 @@ def get_address_json_from_row(params):
     state = j['state']
     params = {"state":state, "city": city, "address": address }
     response = requests.post('http://tod.chicagocityscape.com/tod/index.php?address=' + address + '&city=' + city + '&state=' + state)
-    print response.url
-    return response.json()
+    url = response.url
+    return {"response": response.json(), "url": url}
 
 """currently un-used becuase string-matching is probably a bad idea here"""
 def get_exact_match(potential_matches, address):
@@ -38,7 +38,8 @@ def get_closest_match(potential_matches):
 """uses pandas to return only the two entries with the smallest distance to centroid"""
 
 def get_two_closest(potential_matches):
-    two_closest = pd.DataFrame.from_records(potential_matches, index= None).apply(lambda x: pd.to_numeric(x, errors='ignore')).nsmallest(2, 'distance_to_centroid')
+    two_closest = pd.DataFrame.from_dict(potential_matches, dtype=float).nsmallest(2, 'distance_to_centroid')
+    print two_closest
     return two_closest
 
 
@@ -49,8 +50,11 @@ with open(address_list, 'rb') as f:
     in_csv1 = csv.DictReader(f)
     for row in in_csv1: #parse each row into an api call, return only the intersecting parcels, get the two closest, append these results to the master dataframe
         r = get_address_json_from_row(row)
-        intersecting_parcels = r['properties']['parcels_intersecting']
-        two_closest = get_two_closest(intersecting_parcels)
+        #intersecting_parcels = r['response']['properties']['parcels_intersecting']
+        intersecting_parcels = r['response']['properties']['parcels_intersecting'], r['url']
+        two_closest = get_two_closest(intersecting_parcels[0])
+        print r['url']
+        #results_url = r[1]
         results = results.append(two_closest)
-#pick specific columns & write to csv
+#pick specific columns
 results[['requested_address', 'address', 'pin', 'distance_to_centroid', 'distance_to_edge']].to_csv(output_path, index_label= 'closest_rank')
