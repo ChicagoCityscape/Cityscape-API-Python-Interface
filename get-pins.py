@@ -39,7 +39,6 @@ def get_closest_match(potential_matches):
 
 def get_two_closest(potential_matches):
     two_closest = pd.DataFrame.from_dict(potential_matches, dtype=float).nsmallest(2, 'distance_to_centroid')
-    print two_closest
     return two_closest
 
 
@@ -54,7 +53,7 @@ with open(address_list, 'rb') as f:
         intersecting_parcels = r['response']['properties']['parcels_intersecting'], r['url']
         two_closest = get_two_closest(intersecting_parcels[0])
         print r['url']
-        #results_url = r[1]
         results = results.append(two_closest)
+        results['url'] = r['url']
 #pick specific columns
-results[['requested_address', 'address', 'pin', 'distance_to_centroid', 'distance_to_edge']].to_csv(output_path, index_label= 'closest_rank')
+results[['requested_address', 'address', 'pin', 'distance_to_centroid', 'distance_to_edge', 'url']].to_csv(output_path, index_label= 'closest_rank')
