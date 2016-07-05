@@ -38,7 +38,9 @@ def get_closest_match(potential_matches):
 """uses pandas to return only the two entries with the smallest distance to centroid"""
 
 def get_two_closest(potential_matches):
-    two_closest = pd.DataFrame.from_dict(potential_matches, dtype=float).nsmallest(2, 'distance_to_centroid')
+    matches = pd.DataFrame.from_dict(potential_matches) #load in dict, data types as object
+    two_closest = matches.where(matches.distance_to_centroid.astype(float).nsmallest(2)) # cast distance to float, sort by that, use it in a where clause
+    two_closest = two_closest[two_closest.distance_to_centroid.notnull() == True] # remove the null entries (where keeps the shape of the original data)
     return two_closest
 
 
