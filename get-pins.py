@@ -6,7 +6,7 @@ import pandas as pd
 address_list = 'sample.csv'
 output_path = 'output.csv'
 
-
+list1 = pd.read_csv(address_list)
 
 def get_address_json_from_row(params):
     """establishes the parameters for the api calls. atm they are decalred individually becuase the api needs them in a certain order.
@@ -49,24 +49,40 @@ def get_two_closest(potential_matches):
         two_closest = two_closest[two_closest.distance_to_centroid.notnull() == True] # remove the null entries (where keeps the shape of the original data)
     return two_closest
 
+def get_null_response(potential_matches):
+    matches = pd.DataFrame.from_records(potential_matches, index=['no_result'])
+    null_response = matches
+    return null_response
 
-#declare empy pandas df to store all results
-results = pd.read_csv(address_list)
+results = pd.DataFrame()
 #open the address lists and read the rows as dictionaries
 with open(address_list, 'rb') as f:
     in_csv1 = csv.DictReader(f)
+
     for row in in_csv1: #parse each row into an api call, return only the intersecting parcels, get the two closest, append these results to the master dataframe
         r = get_address_json_from_row(row)
+        print len(r)
+        urls = []
         #intersecting_parcels = r['response']['properties']['parcels_intersecting']
         intersecting_parcels = r['response']['properties']['parcels_intersecting'], r['url']
+        print intersecting_parcels[0] != None
+        urls.append(intersecting_parcels[1])
+        print urls
         if intersecting_parcels[0] != None:
             two_closest = get_two_closest(intersecting_parcels[0])
-            print r['url']
-            results.append(two_closest)
-            results['url'] = r['url']
-        else:
-            print r['url']
-            pass
+            results = results.append(two_closest)
+            results['url'] = intersecting_parcels[1]
+
+        elif intersecting_parcels[0] == None:
+            none = get_null_response(r['response']['properties']['request'])
+            results = results.append(none)
+            results['url'] = intersecting_parcels[1]
+
+            #nulldict = {}
+            #for i in results.columns:
+            #    nulldict[i] = "no_results"
+            #results = results.append(nulldict, ignore_index= True)
+            #null.add(nulldict, axis='columns', level=None, fill_value= "no_results")
 #pick specific columns
-#results[['requested_address', 'address', 'pin', 'distance_to_centroid', 'distance_to_edge', 'url']].to_csv(output_path, index_label= 'closest_rank')
-results.to_csv(output_path, index_label= 'closest_rank')
+results[['requested_address', 'address', 'pin', 'distance_to_centroid', 'distance_to_edge', 'url']].to_csv(output_path, index_label= 'closest_rank')
+#results.to_csv(output_path, index_label= 'closest_rank')
