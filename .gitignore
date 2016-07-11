@@ -6,3 +6,4 @@ steve_init.py
 output.csv
 Untitled.ipynb
 *.ipynb
+.ipynb_checkpoints
