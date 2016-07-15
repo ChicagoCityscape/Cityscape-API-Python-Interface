@@ -65,10 +65,12 @@ with open(address_list, 'rb') as f:
         urls = []
         #intersecting_parcels = r['response']['properties']['parcels_intersecting']
         intersecting_parcels = r['response']['properties']['parcels_intersecting'], r['url']
-        print intersecting_parcels[0] != None
+        
         urls.append(intersecting_parcels[1])
         print urls
         if intersecting_parcels[0] != None:
+            print intersecting_parcels[0] != None
+            print len(intersecting_parcels[0])
             two_closest = get_two_closest(intersecting_parcels[0])
             results = results.append(two_closest)
             results['url'] = intersecting_parcels[1]
