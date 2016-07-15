@@ -59,9 +59,9 @@ results = pd.DataFrame()
 with open(address_list, 'rb') as f:
     in_csv1 = csv.DictReader(f)
 
-    for row in in_csv1: #parse each row into an api call, return only the intersecting parcels, get the two closest, append these results to the master dataframe
+    for row, i=0 in in_csv1: #parse each row into an api call, return only the intersecting parcels, get the two closest, append these results to the master dataframe
         r = get_address_json_from_row(row)
-        print len(r)
+        print "for row", i,  "number of potential matches" , len(r)
         urls = []
         #intersecting_parcels = r['response']['properties']['parcels_intersecting']
         intersecting_parcels = r['response']['properties']['parcels_intersecting'], r['url']
