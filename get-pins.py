@@ -59,23 +59,23 @@ results = pd.DataFrame()
 with open(address_list, 'rb') as f:
     in_csv1 = csv.DictReader(f)
 
-    for row, i=0 in in_csv1: #parse each row into an api call, return only the intersecting parcels, get the two closest, append these results to the master dataframe
+    for idx, row in enumerate(in_csv1): #parse each row into an api call, return only the intersecting parcels, get the two closest, append these results to the master dataframe
         r = get_address_json_from_row(row)
-        print "for row", i,  "number of potential matches" , len(r)
         urls = []
         #intersecting_parcels = r['response']['properties']['parcels_intersecting']
         intersecting_parcels = r['response']['properties']['parcels_intersecting'], r['url']
-        
+
         urls.append(intersecting_parcels[1])
-        print urls
-        if intersecting_parcels[0] != None:
-            print intersecting_parcels[0] != None
-            print len(intersecting_parcels[0])
+        print "for row", idx, "prepped url is: " ,urls
+        print "length of intersecting_parcels", len(intersecting_parcels[0])
+        if intersecting_parcels[0]:
+            print "intersecting_parcels not empty!"
+            print "number of intersecting_parcels matches", len(intersecting_parcels[0])
             two_closest = get_two_closest(intersecting_parcels[0])
             results = results.append(two_closest)
             results['url'] = intersecting_parcels[1]
-
-        elif intersecting_parcels[0] == None:
+        else:
+            print "intersecting_parcels is empty, print nulls for this row!"
             none = get_null_response(r['response']['properties']['request'])
             results = results.append(none)
             results['url'] = intersecting_parcels[1]
