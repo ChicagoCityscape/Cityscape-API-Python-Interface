@@ -19,7 +19,7 @@ def get_address_json_from_row(params):
     params = {"state":state, "city": city, "address": address }
     response = requests.post('http://tod.chicagocityscape.com/tod/index.php?address=' + address + '&city=' + city + '&state=' + state)
     url = response.url
-    return {"response": response.json(), "url": url}
+    return {"response": response.json(), "url": url, "requested_address": params['address']}
 
 
 def get_exact_match(potential_matches, address):
@@ -64,21 +64,30 @@ with open(address_list, 'rb') as f:
         r = get_address_json_from_row(row)
 
         intersecting_parcels = r['response']['properties']['parcels_intersecting'], r['url']
+        print "requested is: ", r['requested_address']
         print "for row", idx, "prepped url is: " ,intersecting_parcels[1]
         print "length of intersecting_parcels", len(intersecting_parcels[0])
         if intersecting_parcels[0]:
             print "intersecting_parcels not empty!"
+            print r['response']['properties']['request']['city']
             print "number of intersecting_parcels matches", len(intersecting_parcels[0])
             two_closest = get_two_closest(intersecting_parcels[0])
             two_closest['url'] = intersecting_parcels[1]
+            two_closest['city'] = r['response']['properties']['request']['city']
             results = results.append(two_closest)
             #results['url'] = intersecting_parcels[1]
         else:
             print "intersecting_parcels is empty, print nulls for this row!"
             none = get_null_response(r['response']['properties']['request'])
+            #swap address_columns
+            none['requested_address'] = r['requested_address']
+            print "null request addy" , none['requested_address']
+            none['address'] = 'no_result'
             none['url'] = intersecting_parcels[1]
             results = results.append(none)
 
+print results['city']
 #pick specific columns, write to csv
-results[['requested_address', 'address', 'pin', 'distance_to_centroid', 'distance_to_edge', 'url']].to_csv(output_path, index_label= 'closest_rank')
+results.rename(columns={'address': 'returned_address'}, inplace=True)
+results[['requested_address', 'returned_address', 'city', 'pin', 'distance_to_centroid', 'distance_to_edge', 'url']].to_csv(output_path, index_label= 'closest_rank')
 #results.to_csv(output_path, index_label= 'closest_rank')
