@@ -55,36 +55,30 @@ def get_null_response(potential_matches):
     return null_response
 
 results = pd.DataFrame()
+
 #open the address lists and read the rows as dictionaries
 with open(address_list, 'rb') as f:
     in_csv1 = csv.DictReader(f)
 
     for idx, row in enumerate(in_csv1): #parse each row into an api call, return only the intersecting parcels, get the two closest, append these results to the master dataframe
         r = get_address_json_from_row(row)
-        urls = []
-        #intersecting_parcels = r['response']['properties']['parcels_intersecting']
-        intersecting_parcels = r['response']['properties']['parcels_intersecting'], r['url']
 
-        urls.append(intersecting_parcels[1])
-        print "for row", idx, "prepped url is: " ,urls
+        intersecting_parcels = r['response']['properties']['parcels_intersecting'], r['url']
+        print "for row", idx, "prepped url is: " ,intersecting_parcels[1]
         print "length of intersecting_parcels", len(intersecting_parcels[0])
         if intersecting_parcels[0]:
             print "intersecting_parcels not empty!"
             print "number of intersecting_parcels matches", len(intersecting_parcels[0])
             two_closest = get_two_closest(intersecting_parcels[0])
+            two_closest['url'] = intersecting_parcels[1]
             results = results.append(two_closest)
-            results['url'] = intersecting_parcels[1]
+            #results['url'] = intersecting_parcels[1]
         else:
             print "intersecting_parcels is empty, print nulls for this row!"
             none = get_null_response(r['response']['properties']['request'])
+            none['url'] = intersecting_parcels[1]
             results = results.append(none)
-            results['url'] = intersecting_parcels[1]
 
-            #nulldict = {}
-            #for i in results.columns:
-            #    nulldict[i] = "no_results"
-            #results = results.append(nulldict, ignore_index= True)
-            #null.add(nulldict, axis='columns', level=None, fill_value= "no_results")
-#pick specific columns
+#pick specific columns, write to csv
 results[['requested_address', 'address', 'pin', 'distance_to_centroid', 'distance_to_edge', 'url']].to_csv(output_path, index_label= 'closest_rank')
 #results.to_csv(output_path, index_label= 'closest_rank')
