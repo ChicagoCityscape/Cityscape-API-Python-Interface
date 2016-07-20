@@ -95,7 +95,7 @@ with open(address_list, 'rb') as f:
             none['address'] = 'no_result'
             none['url'] = intersecting_parcels[1]
             two_closest['city'] = r['response']['properties']['request']['city']
-            two_closest['id'] = intersecting_parcels[2]
+            none['id'] = intersecting_parcels[2]
             results = results.append(none)
 
 print results['city']
