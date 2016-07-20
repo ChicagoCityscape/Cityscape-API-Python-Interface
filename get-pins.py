@@ -101,5 +101,6 @@ with open(address_list, 'rb') as f:
 print results['city']
 #pick specific columns, write to csv
 results.rename(columns={'address': 'returned_address'}, inplace=True)
-results[['id', 'requested_address', 'returned_address', 'city', 'pin', 'distance_to_centroid', 'distance_to_edge', 'url']].to_csv(output_path, index_label= 'closest_rank')
+results.rename(columns={'pin': 'returned_pin'}, inplace=True)
+results[['id', 'requested_address', 'returned_address', 'city', 'returned_pin', 'distance_to_centroid', 'distance_to_edge', 'url']].to_csv(output_path, index_label= 'closest_rank')
 #results.to_csv(output_path, index_label= 'closest_rank')
